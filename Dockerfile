@@ -11,8 +11,7 @@ WORKDIR /express-docker
 COPY . .
 
 # Installing nano and other dependencies
-RUN apt-get update && apt-get install -y nano && rm -rf /var/lib/apt/lists/* \
-    && apt-get install sqlite3 && npm install
+RUN apt-get update && apt-get install -y nano && rm -rf /var/lib/apt/lists/* \ && npm install
 
 # Exposing the port
 EXPOSE 2354
