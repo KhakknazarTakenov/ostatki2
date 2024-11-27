@@ -1,0 +1,21 @@
+# Fetching the minified node image on alpine linux
+FROM node:slim
+
+# Declaring env
+ENV NODE_ENV development
+
+# Setting up the work directory
+WORKDIR /express-docker
+
+# Copying all the files in our project
+COPY . .
+
+# Installing nano and other dependencies
+RUN apt-get update && apt-get install -y nano && rm -rf /var/lib/apt/lists/* \
+    && apt-get install sqlite3 && npm install
+
+# Exposing the port
+EXPOSE 2354
+
+# Starting our application
+CMD [ "node", "index.js" ]
