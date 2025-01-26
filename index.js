@@ -11,10 +11,6 @@ const {encryptText, decryptText} = require("./services/crypt");
 
 const DealsService = require("./services/deals");
 
-const {appendFileSync} = require("node:fs");
-const {all} = require("express/lib/application");
-const dealService = require("./services/db");
-
 const envPath = path.join(__dirname, '.env');
 dotenv.config({ path: envPath });
 
@@ -37,36 +33,36 @@ function haltOnTimedOut(req, res, next) {
     if (!req.timedout) next();
 }
 
-const documentsIdsUserfieldKey = "ufCrm24_1732694625717";
-const smartProcessId = 1040;
+const documentsIdsUserfieldKey = process.env.DOCUMENTS_IDS_USERFIELD_ID;
+const cityUserFieldId = process.env.CITY_USERFIELD_ID;
+const funnelId = process.env.FUNNEL_ID;
 
 app.post(BASE_URL+"get_deals_from_bx_insert_in_db/", async (req, res) => {
     try {
-        const smartProcessId = req.body.smart_process_id;
-
         const db = new Db();
         const bxLinkDecrypted = await decryptText(process.env.BX_LINK);
         const dealsService = new DealsService(bxLinkDecrypted);
 
-        const deals = (await dealsService.getAllDealsFromSmartProcess(smartProcessId, documentsIdsUserfieldKey)).map(deal => {
+        const deals = (await dealsService.getAllDealsFromFunnel(funnelId, documentsIdsUserfieldKey, cityUserFieldId)).map(deal => {
             return {
-                id: deal["id"],
-                title: deal["title"],
-                date_create: deal["createdTime"].replace(/T.*/, ""),
-                documents_ids: deal[documentsIdsUserfieldKey]
+                id: deal["ID"],
+                title: deal["TITLE"],
+                date_create: deal["DATE_CREATE"].replace(/T.*/, ""),
+                documents_ids: deal[documentsIdsUserfieldKey],
+                city: deal[cityUserFieldId]
             }
         }).filter(deal => deal !== null);
         if (await db.insertDeals(deals)) {
-            logAccess(BASE_URL+"get_deals_from_bx_insert_in_db/", `Deals from ${smartProcessId} smart process successfully added to DB`);
+            logAccess(BASE_URL+"get_deals_from_bx_insert_in_db/", `Deals from ${funnelId} funnel successfully added to DB`);
         } else {
-            throw new Error(`Error while adding deals from ${smartProcessId} to DB`)
+            throw new Error(`Error while adding deals from ${funnelId} to DB`)
         }
 
-        res.status(200).json({"status": true, "status_msg": "success", "message": `Deals from ${smartProcessId} funnel successfully added to DB`});
+        res.status(200).json({"status": true, "status_msg": "success", "message": `Deals from ${funnelId} funnel successfully added to DB`});
 
     } catch (error) {
         logError(BASE_URL+"get_deals_from_bx/", error);
-        res.status(500).json({"status": false, "status_msg": "error", "message": "server error"});
+        res.status(500).json({"status": false, "status_msg": "error", "message": "server error", "err": error});
     }
 })
 
@@ -100,12 +96,13 @@ app.post(BASE_URL+"add_deal_handler/", async (req, res) => {
         const db = new Db();
         const dealService = new DealsService(bxLinkDecrypted);
 
-        const newDeal = [(await dealService.getDealById(smartProcessId, id))].map(deal => {
+        const newDeal = [(await dealService.getDealById(id))].map(deal => {
             return {
-                id: deal["id"],
-                title: deal["title"],
-                date_create: deal["createdTime"],
+                id: deal["ID"],
+                title: deal["TITLE"],
+                date_create: deal["DATE_CREATE"].replace(/T.*/, ""),
                 documents_ids: deal[documentsIdsUserfieldKey],
+                city: deal[cityUserFieldId]
             }
         }).filter(deal => deal !== null);
 
@@ -145,8 +142,9 @@ app.post(BASE_URL+"update_deal_handler/", async (req, res) => {
             return {
                 id: deal["ID"],
                 title: deal["TITLE"],
-                date_create: deal["DATE_CREATE"],
+                date_create: deal["DATE_CREATE"].replace(/T.*/, ""),
                 documents_ids: deal[documentsIdsUserfieldKey],
+                city: deal[cityUserFieldId]
             }
         }).filter(deal => deal !== null);
 
@@ -188,7 +186,9 @@ app.post(BASE_URL+"delete_deal_handler/", async (req, res) => {
 })
 
 app.post(BASE_URL+"test/", async (req, res) => {
-    const db = new Db();
+    // const bxLink = req.body.bx_link;
+    // const bxLinkCryptyed = await decryptText(bxLink);
+    // res.status(200).json(bxLinkCryptyed);
 })
 
 app.listen(PORT, () => {

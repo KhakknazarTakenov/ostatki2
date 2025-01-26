@@ -10,7 +10,7 @@ class DealsService {
         this.bx = Bitrix(link);
     }
 
-    async getAllDealsFromSmartProcess(smartProcessId, documentsIdsUserfieldKey) {
+    async getAllDealsFromFunnel(funnelId, documentsIdsUserfieldKey, cityUserFieldId) {
         const allResults = [];
         let res;
 
@@ -19,10 +19,10 @@ class DealsService {
 
         try {
             do {
-                res = (await this.bx.call("crm.item.list",
+                res = (await this.bx.deals.list(
                     {
-                        "entityTypeId": smartProcessId,
-                        "select": ["id", "title", "createdTime", documentsIdsUserfieldKey],
+                        "filter": { "CATEGORY_ID": funnelId },
+                        "select": ["ID", "TITLE", "DATE_CREATE", documentsIdsUserfieldKey, cityUserFieldId],
                         "start": start
                     }
                 ))
@@ -42,9 +42,9 @@ class DealsService {
         }
     }
 
-    async getDealById(smartProcessId, itemId) {
+    async getDealById(dealId) {
         try {
-            return (await this.bx.call("crm.item.get", { "entityTypeId": smartProcessId, "id": itemId })).result;
+            return (await this.bx.deals.get(dealId)).result;
         } catch (error) {
             logError("DealsService getDealById", error);
         }

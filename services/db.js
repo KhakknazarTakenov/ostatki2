@@ -13,7 +13,8 @@ class Db {
                     id INTEGER PRIMARY KEY,  
                     title TEXT,
                     date_create DATE,
-                    documents_ids TEXT
+                    documents_ids TEXT,
+                    city_field_value TEXT
                 );
             `);
         });
@@ -27,11 +28,11 @@ class Db {
             try {
                 db.serialize(() => {
                     const stmt = db.prepare(`
-                    INSERT OR REPLACE INTO deals (id, title, date_create, documents_ids) VALUES (?, ?, ?, ?);
+                    INSERT OR REPLACE INTO deals (id, title, date_create, documents_ids, city_field_value) VALUES (?, ?, ?, ?, ?);
                 `);
 
                     deals.forEach((deal) => {
-                        stmt.run(deal.id, deal.title, deal.date_create, deal.documents_ids, (res, err) => {
+                        stmt.run(deal.id, deal.title, deal.date_create, deal.documents_ids, deal.city, (res, err) => {
                             if (err) {
                                 logError("DB service insertDeals run", err)
                             }
