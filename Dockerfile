@@ -2,7 +2,7 @@
 FROM node:slim
 
 # Declaring env
-ENV NODE_ENV development
+ENV NODE_ENV=development
 
 # Setting up the work directory
 WORKDIR /express-docker
@@ -11,10 +11,14 @@ WORKDIR /express-docker
 COPY . .
 
 # Installing nano and other dependencies
-RUN apt-get update && apt-get install -y nano && rm -rf /var/lib/apt/lists/* \ && npm install
+RUN apt-get update && apt-get install -y nano \
+    && rm -rf /var/lib/apt/lists/*
+
+# Installing Node.js dependencies
+RUN npm install
 
 # Exposing the port
 EXPOSE 2354
 
 # Starting our application
-CMD [ "node", "index.js" ]
+CMD ["node", "index.js"]
